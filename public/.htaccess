@@ -1,0 +1,176 @@
+# =============================================================================
+# CONFIGURAÇÃO DO APACHE - LADYPHP FRAMEWORK
+# =============================================================================
+# Este arquivo configura o Apache para servir a aplicação LadyPHP.
+# Ele gerencia redirecionamentos, segurança, cache e performance.
+# =============================================================================
+
+# =============================================================================
+# CONFIGURAÇÃO DE REWRITE E ROTEAMENTO
+# =============================================================================
+<IfModule mod_rewrite.c>
+    # Desativa listagem de diretórios e visualizações múltiplas
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    # Ativa o motor de reescrita de URLs
+    RewriteEngine On
+
+    # =========================================================================
+    # TRATAMENTO DE CABEÇALHOS DE AUTENTICAÇÃO
+    # =========================================================================
+    # Converte o cabeçalho Authorization para variável de ambiente
+    # Necessário para autenticação via token (JWT, Bearer, etc)
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # =========================================================================
+    # TRATAMENTO DE BARRAS FINAIS
+    # =========================================================================
+    # Remove barras finais desnecessárias das URLs
+    # Exemplo: /api/users/ -> /api/users
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # =========================================================================
+    # ROTEAMENTO PARA O FRONT CONTROLLER
+    # =========================================================================
+    # Se o arquivo ou diretório não existir, redireciona para o index.php
+    # Isso permite que o framework processe todas as rotas
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# =============================================================================
+# CONFIGURAÇÕES DE SEGURANÇA BÁSICAS
+# =============================================================================
+# Desativa a listagem de diretórios em todo o site
+Options -Indexes
+
+# =============================================================================
+# CONFIGURAÇÕES DO PHP
+# =============================================================================
+# Ajusta limites do PHP para uploads e processamento
+# Nota: Estes valores podem ser sobrescritos pelo php.ini
+<IfModule mod_php.c>
+    # Limite de upload de arquivos (ajuste conforme necessário)
+    php_value upload_max_filesize 32M
+    php_value post_max_size 32M
+    
+    # Tempo máximo de execução e processamento
+    php_value max_execution_time 120
+    php_value max_input_time 120
+    
+    # Configurações de memória
+    php_value memory_limit 256M
+    
+    # Configurações de erro (desative em produção)
+    php_flag display_errors off
+    php_flag display_startup_errors off
+    php_value error_reporting E_ALL & ~E_DEPRECATED & ~E_STRICT
+</IfModule>
+
+# =============================================================================
+# OTIMIZAÇÕES DE PERFORMANCE
+# =============================================================================
+# Mantém conexões persistentes para melhor performance
+<IfModule mod_headers.c>
+    Header set Connection keep-alive
+</IfModule>
+
+# =============================================================================
+# COMPRESSÃO DE CONTEÚDO
+# =============================================================================
+# Habilita compressão GZIP para reduzir o tamanho das transferências
+<IfModule mod_deflate.c>
+    # Compressão para conteúdo textual
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE text/javascript
+    
+    # Compressão para conteúdo XML e JSON
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/json
+    
+    # Compressão para JavaScript
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+</IfModule>
+
+# =============================================================================
+# CONTROLE DE CACHE
+# =============================================================================
+# Configura cache do navegador para arquivos estáticos
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # Imagens e mídia: cache por 1 ano
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+    ExpiresByType video/mp4 "access plus 1 year"
+    ExpiresByType video/webm "access plus 1 year"
+    
+    # CSS e JavaScript: cache por 1 mês
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType text/javascript "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    
+    # Outros arquivos: cache por 1 mês
+    ExpiresByType application/pdf "access plus 1 month"
+    ExpiresByType application/x-shockwave-flash "access plus 1 month"
+    
+    # HTML e dados: sem cache
+    ExpiresByType text/html "access plus 0 seconds"
+    ExpiresByType application/json "access plus 0 seconds"
+    ExpiresByType application/xml "access plus 0 seconds"
+</IfModule>
+
+# =============================================================================
+# CABEÇALHOS DE SEGURANÇA
+# =============================================================================
+<IfModule mod_headers.c>
+    # =========================================================================
+    # PROTEÇÃO CONTRA ATAQUES
+    # =========================================================================
+    # Proteção contra XSS (Cross-Site Scripting)
+    Header set X-XSS-Protection "1; mode=block"
+    
+    # Previne MIME-type sniffing
+    Header set X-Content-Type-Options "nosniff"
+    
+    # Proteção contra clickjacking
+    Header set X-Frame-Options "SAMEORIGIN"
+    
+    # =========================================================================
+    # SEGURANÇA DE TRANSPORTE
+    # =========================================================================
+    # HSTS (HTTP Strict Transport Security)
+    # Força conexões HTTPS (descomente em produção com SSL)
+    # Header set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
+    
+    # =========================================================================
+    # POLÍTICAS DE SEGURANÇA
+    # =========================================================================
+    # Política de Referrer
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Política de Segurança de Conteúdo (CSP)
+    # Ajuste conforme as necessidades da sua aplicação
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self' https:;"
+</IfModule>
+
+# =============================================================================
+# FIM DO ARQUIVO .HTACCESS
+# ============================================================================= 

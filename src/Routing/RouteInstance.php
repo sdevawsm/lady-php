@@ -134,12 +134,55 @@ class RouteInstance
                 return call_user_func($this->action, $request);
             }
 
-            // TODO: Implementar execução de controller
-            return new Response('Not implemented', 501);
+            // Se a ação for uma string no formato "Controller@method"
+            if (is_string($this->action)) {
+                return $this->runController($request);
+            }
+
+            return new Response('Invalid route action', 500);
         };
 
         // Executa o pipeline
         return $pipeline->process($request, $destination);
+    }
+
+    /**
+     * Executa um método de um controlador
+     *
+     * @param Request $request
+     * @return Response
+     * @throws \Exception
+     */
+    protected function runController(Request $request): Response
+    {
+        // Verifica se a ação está no formato correto
+        if (!str_contains($this->action, '@')) {
+            throw new \Exception("Invalid controller action format. Expected 'Controller@method'");
+        }
+
+        // Separa o controlador e o método
+        [$controller, $method] = explode('@', $this->action);
+
+        // Adiciona o namespace base dos controladores se não estiver presente
+        if (!str_starts_with($controller, 'App\\Http\\Controllers\\')) {
+            $controller = 'App\\Http\\Controllers\\' . $controller;
+        }
+
+        // Verifica se o controlador existe
+        if (!class_exists($controller)) {
+            throw new \Exception("Controller {$controller} not found");
+        }
+
+        // Instancia o controlador
+        $controllerInstance = new $controller();
+
+        // Verifica se o método existe
+        if (!method_exists($controllerInstance, $method)) {
+            throw new \Exception("Method {$method} not found in controller {$controller}");
+        }
+
+        // Executa o método do controlador
+        return $controllerInstance->$method($request);
     }
 
     /**

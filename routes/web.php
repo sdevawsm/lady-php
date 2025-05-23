@@ -10,9 +10,7 @@ Route::get('/', function() {
 
 
 Route::group(['prefix' => 'v1'], function() {
-    Route::get('/dashboard', function() {
-        return new Response('Painel Administrativo');
-    });
+    Route::get('/dashboard', 'Admin\DashboardController@index');
     
     Route::get('/users', function() {
         return new Response('Lista de Usuários');

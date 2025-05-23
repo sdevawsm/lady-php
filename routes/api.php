@@ -8,29 +8,15 @@ Route::group([
     'prefix' => 'v1',
     'middleware' => 'App\Http\Middleware\LogMiddleware'
 ], function() {
-    // Rota de status da API
-    Route::get('/status', function() {
-        return Response::json([
-            'status' => 'online',
-            'version' => '1.0.0'
-        ]);
-    });
+    // Rotas de status da API
+    Route::get('/status', 'Api\StatusController@index');
+    Route::get('/status/details', 'Api\StatusController@details');
 
     // Grupo de rotas administrativas com autenticação
     Route::group(['middleware' => 'App\Http\Middleware\AuthMiddleware'], function() {
-        Route::get('/admin', function() {
-            return Response::json([
-                'message' => 'Painel Administrativo',
-                'user' => 'admin'
-            ]);
-        });
-
-        // Você pode adicionar mais rotas administrativas aqui
-        Route::get('/admin/users', function() {
-            return Response::json([
-                'users' => ['admin', 'user1', 'user2']
-            ]);
-        });
+        Route::get('/admin', 'Admin\DashboardController@index');
+        Route::get('/admin/users', 'Admin\DashboardController@users');
+        Route::get('/admin/settings', 'Admin\DashboardController@settings');
     });
 });
 
@@ -39,13 +25,7 @@ Route::group([
     'prefix' => 'v2',
     'middleware' => 'App\Http\Middleware\LogMiddleware'
 ], function() {
-    Route::get('/status', function() {
-        return Response::json([
-            'status' => 'online',
-            'version' => '2.0.0',
-            'features' => ['new-feature-1', 'new-feature-2']
-        ]);
-    });
+    Route::get('/status', 'Api\StatusController@index');
 });
 
 
