@@ -1,8 +1,20 @@
 <?php
 
+use LadyPHP\Routing\RouteFacade as Route;
 use LadyPHP\Http\Response;
 
 // Rota de exemplo
-$router->get('/', function() {
+Route::get('/', function() {
     return new Response('Bem-vindo ao LadyPHP!');
-}); 
+});
+
+// Exemplo de grupo de rotas
+/*Route::group(['prefix' => 'admin'], function() {
+    Route::get('/dashboard', function() {
+        return new Response('Painel Administrativo');
+    });
+    
+    Route::get('/users', function() {
+        return new Response('Lista de Usuários');
+    });
+}); */

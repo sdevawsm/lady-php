@@ -17,7 +17,7 @@ class Router
     /**
      * Lista de todas as rotas registradas
      * 
-     * @var array<Route>
+     * @var array<RouteInstance>
      */
     protected array $routes = [];
 
@@ -34,9 +34,9 @@ class Router
      *
      * @param string $uri URI da rota
      * @param mixed $action Ação a ser executada (closure ou string "Controller@method")
-     * @return Route
+     * @return RouteInstance
      */
-    public function get(string $uri, $action): Route
+    public function get(string $uri, $action): RouteInstance
     {
         return $this->addRoute('GET', $uri, $action);
     }
@@ -46,9 +46,9 @@ class Router
      *
      * @param string $uri URI da rota
      * @param mixed $action Ação a ser executada (closure ou string "Controller@method")
-     * @return Route
+     * @return RouteInstance
      */
-    public function post(string $uri, $action): Route
+    public function post(string $uri, $action): RouteInstance
     {
         return $this->addRoute('POST', $uri, $action);
     }
@@ -58,9 +58,9 @@ class Router
      *
      * @param string $uri URI da rota
      * @param mixed $action Ação a ser executada (closure ou string "Controller@method")
-     * @return Route
+     * @return RouteInstance
      */
-    public function put(string $uri, $action): Route
+    public function put(string $uri, $action): RouteInstance
     {
         return $this->addRoute('PUT', $uri, $action);
     }
@@ -70,9 +70,9 @@ class Router
      *
      * @param string $uri URI da rota
      * @param mixed $action Ação a ser executada (closure ou string "Controller@method")
-     * @return Route
+     * @return RouteInstance
      */
-    public function delete(string $uri, $action): Route
+    public function delete(string $uri, $action): RouteInstance
     {
         return $this->addRoute('DELETE', $uri, $action);
     }
@@ -112,12 +112,12 @@ class Router
      * @param string $method Método HTTP (GET, POST, etc)
      * @param string $uri URI da rota
      * @param mixed $action Ação a ser executada
-     * @return Route
+     * @return RouteInstance
      */
-    protected function addRoute(string $method, string $uri, $action): Route
+    protected function addRoute(string $method, string $uri, $action): RouteInstance
     {
-        // Cria uma nova instância de Route
-        $route = new Route($method, $uri, $action);
+        // Cria uma nova instância de RouteInstance
+        $route = new RouteInstance($method, $uri, $action);
         
         // Aplica os atributos do grupo atual à rota
         if (!empty($this->currentGroup)) {
@@ -150,6 +150,18 @@ class Router
     {
         $method = $request->getMethod();
         $uri = $request->getPath();
+
+        // Debug: Mostrar rotas registradas
+        error_log("Rotas registradas:");
+        foreach ($this->routes as $route) {
+            error_log(sprintf(
+                "Método: %s, URI: %s, Prefixo: %s",
+                $route->getMethod(),
+                $route->getUri(),
+                $route->getPrefix() ?? 'nenhum'
+            ));
+        }
+        error_log("Requisição atual - Método: {$method}, URI: {$uri}");
 
         // Procura por uma rota que corresponda à requisição
         foreach ($this->routes as $route) {

@@ -10,7 +10,10 @@
         "psr-4": {
             "LadyPHP\\": "src/",
             "App\\": "app/"
-        }
+        },
+        "files": [
+            "src/helpers.php"
+        ]
     },
     "authors": [
         {
