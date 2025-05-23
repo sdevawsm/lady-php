@@ -380,4 +380,62 @@ class Request
             ]
         ];
     }
+
+    /**
+     * Obtém um cookie específico ou todos os cookies
+     * Compatível com Laravel
+     * 
+     * @param string|null $key Nome do cookie (null para retornar todos)
+     * @param mixed $default Valor padrão se o cookie não existir
+     * @return mixed
+     */
+    public function cookie(?string $key = null, $default = null)
+    {
+        if ($key === null) {
+            return $this->cookies;
+        }
+
+        return $this->cookies[$key] ?? $default;
+    }
+
+    /**
+     * Alias para cookie()
+     * Compatível com Laravel
+     * 
+     * @param string|null $key
+     * @param mixed $default
+     * @return mixed
+     */
+    public function cookies(?string $key = null, $default = null)
+    {
+        return $this->cookie($key, $default);
+    }
+
+    /**
+     * Verifica se um arquivo foi enviado na requisição
+     * Compatível com Laravel
+     * 
+     * @param string $key Nome do campo do arquivo
+     * @return bool
+     */
+    public function hasFile(string $key): bool
+    {
+        return isset($this->files[$key]) && $this->files[$key]['error'] !== UPLOAD_ERR_NO_FILE;
+    }
+
+    /**
+     * Obtém um arquivo específico ou todos os arquivos
+     * Compatível com Laravel
+     * 
+     * @param string|null $key Nome do campo do arquivo (null para retornar todos)
+     * @return mixed
+     */
+    public function file(?string $key = null)
+    {
+        if ($key === null) {
+            return $this->files;
+        }
+
+        return $this->hasFile($key) ? $this->files[$key] : null;
+    }
 } 

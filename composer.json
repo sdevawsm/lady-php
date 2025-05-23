@@ -1,6 +1,6 @@
 {
-    "name": "lady-php/framework",
-    "description": "Um framework PHP inspirado no Laravel",
+    "name": "ladyphp/framework",
+    "description": "Framework PHP inspirado no Laravel",
     "type": "project",
     "require": {
         "php": ">=8.1",
@@ -8,8 +8,8 @@
     },
     "autoload": {
         "psr-4": {
-            "LadyPHP\\": "src/",
-            "App\\": "app/"
+            "App\\": "app/",
+            "LadyPHP\\": "src/"
         },
         "files": [
             "src/helpers.php"

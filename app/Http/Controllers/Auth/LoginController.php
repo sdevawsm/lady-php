@@ -15,21 +15,33 @@ class LoginController extends Controller
 
     public function login(Request $request): Response
     {
-        // Exemplo 1: Usando dd() para debug e encerrar
-        // $request->dd($request->toArray());
-        
-        // Exemplo 2: Usando dump() para debug sem encerrar
-        // $request->dump($request->toArray());
-        
-        // Exemplo 3: Retornando todos os dados como JSON
-        return $this->json($request->toArray());
-        
-        // Exemplo 4: Debug específico
-        // $request->dd(
-        //     $request->method(),
-        //     $request->all(),
-        //     $request->json(),
-        //     $request->headers()
-        // );
+        // Usando dd() como no Laravel, sem necessidade de importação
+        dd([
+            'Método HTTP' => $request->method(),
+            'URI Completa' => $request->getUri(),
+            'Caminho' => $request->getPath(),
+            'Headers' => $request->headers(),
+            'Content Type' => $request->header('Content-Type'),
+            'É JSON?' => $request->isJson(),
+            'Dados GET' => $request->get(),
+            'Dados POST' => $request->post(),
+            'Dados JSON' => $request->json(),
+            'Todos os Dados' => $request->all(),
+            'Dados do Servidor' => [
+                'REQUEST_METHOD' => $request->server['REQUEST_METHOD'] ?? null,
+                'REQUEST_URI' => $request->server['REQUEST_URI'] ?? null,
+                'HTTP_HOST' => $request->server['HTTP_HOST'] ?? null,
+                'REMOTE_ADDR' => $request->server['REMOTE_ADDR'] ?? null,
+                'HTTP_USER_AGENT' => $request->server['HTTP_USER_AGENT'] ?? null,
+            ],
+            'Cookies' => $request->cookie(),
+            'Arquivos' => $request->file()
+        ]);
+
+        // Exemplos de uso dos novos métodos:
+        // dd($request->cookie('session'));
+        // dd($request->cookies());
+        // dd($request->hasFile('avatar'));
+        // dd($request->file('avatar'));
     }
 }
