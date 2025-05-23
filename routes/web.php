@@ -9,6 +9,18 @@ Route::get('/', function() {
 });
 
 
+Route::get('/login', function() {
+    return new Response('<form action="/login" method="post">
+        <input type="text" name="email" placeholder="Email">
+        <input type="password" name="password" placeholder="Senha">
+        <button type="submit">Login</button>
+    </form>');
+});
+
+
+
+Route::post('/login', 'Auth\LoginController@login');
+
 Route::group(['prefix' => 'v1'], function() {
     Route::get('/dashboard', 'Admin\DashboardController@index');
     

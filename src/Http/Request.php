@@ -10,6 +10,9 @@ namespace LadyPHP\Http;
  * 
  * Esta classe encapsula as superglobais do PHP ($_GET, $_POST, etc)
  * e fornece uma interface limpa para acessar os dados da requisição.
+ * 
+ * Mantém compatibilidade com os métodos do Laravel para facilitar
+ * a migração e uso do framework.
  */
 class Request
 {
@@ -174,5 +177,207 @@ class Request
     public function isMethod(string $method): bool
     {
         return $this->getMethod() === strtoupper($method);
+    }
+
+    /**
+     * Retorna todos os dados da requisição (GET, POST, etc)
+     * Compatível com Laravel
+     * 
+     * @return array
+     */
+    public function all(): array
+    {
+        return array_merge($this->get, $this->post);
+    }
+
+    /**
+     * Retorna os dados do POST
+     * Compatível com Laravel
+     * 
+     * @return array
+     */
+    public function post(): array
+    {
+        return $this->post;
+    }
+
+    /**
+     * Retorna os dados do GET
+     * Compatível com Laravel
+     * 
+     * @return array
+     */
+    public function get(): array
+    {
+        return $this->get;
+    }
+
+    /**
+     * Retorna um valor específico da requisição
+     * Compatível com Laravel
+     * 
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
+    public function input(string $key, $default = null)
+    {
+        return $this->all()[$key] ?? $default;
+    }
+
+    /**
+     * Retorna apenas os valores das chaves especificadas
+     * Compatível com Laravel
+     * 
+     * @param array $keys
+     * @return array
+     */
+    public function only(array $keys): array
+    {
+        $data = $this->all();
+        return array_intersect_key($data, array_flip($keys));
+    }
+
+    /**
+     * Retorna todos os valores exceto as chaves especificadas
+     * Compatível com Laravel
+     * 
+     * @param array $keys
+     * @return array
+     */
+    public function except(array $keys): array
+    {
+        $data = $this->all();
+        return array_diff_key($data, array_flip($keys));
+    }
+
+    /**
+     * Verifica se uma chave existe na requisição
+     * Compatível com Laravel
+     * 
+     * @param string $key
+     * @return bool
+     */
+    public function has(string $key): bool
+    {
+        return isset($this->all()[$key]);
+    }
+
+    /**
+     * Retorna os headers da requisição
+     * Compatível com Laravel
+     * 
+     * @return array
+     */
+    public function headers(): array
+    {
+        return $this->headers;
+    }
+
+    /**
+     * Retorna um header específico
+     * Compatível com Laravel
+     * 
+     * @param string $key
+     * @return string|null
+     */
+    public function header(string $key): ?string
+    {
+        return $this->getHeader($key);
+    }
+
+    /**
+     * Retorna o método HTTP da requisição
+     * Compatível com Laravel
+     * 
+     * @return string
+     */
+    public function method(): string
+    {
+        return $this->getMethod();
+    }
+
+    /**
+     * Verifica se a requisição é do tipo JSON
+     * Compatível com Laravel
+     * 
+     * @return bool
+     */
+    public function isJson(): bool
+    {
+        return str_contains($this->getHeader('Content-Type') ?? '', 'application/json');
+    }
+
+    /**
+     * Retorna os dados JSON da requisição
+     * Compatível com Laravel
+     * 
+     * @return array
+     */
+    public function json(): array
+    {
+        if ($this->isJson()) {
+            $content = file_get_contents('php://input');
+            return json_decode($content, true) ?? [];
+        }
+        return [];
+    }
+
+    /**
+     * Dump and Die - Exibe os dados e encerra a execução
+     * Compatível com Laravel
+     * 
+     * @param mixed ...$vars Variáveis para exibir
+     * @return never
+     */
+    public function dd(...$vars): never
+    {
+        $this->dump(...$vars);
+        exit(1);
+    }
+
+    /**
+     * Dump - Exibe os dados sem encerrar a execução
+     * Compatível com Laravel
+     * 
+     * @param mixed ...$vars Variáveis para exibir
+     * @return void
+     */
+    public function dump(...$vars): void
+    {
+        echo '<pre style="background: #f5f5f5; padding: 15px; border-radius: 5px; border: 1px solid #ddd; margin: 10px;">';
+        foreach ($vars as $var) {
+            var_dump($var);
+        }
+        echo '</pre>';
+    }
+
+    /**
+     * Exibe todos os dados da requisição de forma organizada
+     * 
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [
+            'method' => $this->method(),
+            'uri' => $this->getUri(),
+            'path' => $this->getPath(),
+            'headers' => $this->headers(),
+            'content_type' => $this->header('Content-Type'),
+            'is_json' => $this->isJson(),
+            'get' => $this->get(),
+            'post' => $this->post(),
+            'json' => $this->json(),
+            'files' => $this->files,
+            'cookies' => $this->cookies,
+            'server' => [
+                'REQUEST_METHOD' => $this->server['REQUEST_METHOD'] ?? null,
+                'REQUEST_URI' => $this->server['REQUEST_URI'] ?? null,
+                'HTTP_HOST' => $this->server['HTTP_HOST'] ?? null,
+                'REMOTE_ADDR' => $this->server['REMOTE_ADDR'] ?? null,
+                'HTTP_USER_AGENT' => $this->server['HTTP_USER_AGENT'] ?? null,
+            ]
+        ];
     }
 } 
