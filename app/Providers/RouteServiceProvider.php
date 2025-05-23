@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use LadyPHP\Core\Application;
+use LadyPHP\Routing\RouteFacade as Route;
 use LadyPHP\Routing\Router;
 
 class RouteServiceProvider extends AppServiceProvider
@@ -25,8 +26,6 @@ class RouteServiceProvider extends AppServiceProvider
      */
     protected function loadRoutes(): void
     {
-        $router = $this->app->getRouter();
-
         // Carrega as rotas web
         if (file_exists($this->routesPath . '/web.php')) {
             require $this->routesPath . '/web.php';
@@ -34,7 +33,7 @@ class RouteServiceProvider extends AppServiceProvider
 
         // Carrega as rotas da API
         if (file_exists($this->routesPath . '/api.php')) {
-            $router->group(['prefix' => 'api'], function (Router $router) {
+            Route::group(['prefix' => 'api'], function(Router $router) {
                 require $this->routesPath . '/api.php';
             });
         }

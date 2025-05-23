@@ -130,4 +130,45 @@ class Response
             ['Content-Type' => 'application/json']
         );
     }
+
+    /**
+     * Retorna o conteúdo da resposta
+     * 
+     * @return mixed
+     */
+    public function getContent()
+    {
+        return $this->content;
+    }
+
+    /**
+     * Retorna o código de status HTTP
+     * 
+     * @return int
+     */
+    public function getStatusCode(): int
+    {
+        return $this->statusCode;
+    }
+
+    /**
+     * Retorna os headers HTTP da resposta
+     * 
+     * @return array
+     */
+    public function getHeaders(): array
+    {
+        return $this->headers;
+    }
+
+    /**
+     * Retorna um header específico
+     * 
+     * @param string $name Nome do header
+     * @return string|null
+     */
+    public function getHeader(string $name): ?string
+    {
+        return $this->headers[$name] ?? null;
+    }
 } 

@@ -22,12 +22,12 @@ class Router
     protected array $routes = [];
 
     /**
-     * Atributos do grupo de rotas atual
-     * Usado para aplicar prefixos e middlewares em grupos de rotas
+     * Pilha de grupos de rotas atuais
+     * Usado para aplicar prefixos e middlewares em grupos aninhados
      * 
      * @var array
      */
-    protected array $currentGroup = [];
+    protected array $groupStack = [];
 
     /**
      * Registra uma rota GET
@@ -96,14 +96,14 @@ class Router
      */
     public function group(array $attributes, callable $callback): void
     {
-        // Armazena os atributos do grupo atual
-        $this->currentGroup = $attributes;
+        // Adiciona os atributos do grupo à pilha
+        $this->groupStack[] = $attributes;
         
         // Executa o callback para registrar as rotas do grupo
         $callback($this);
         
-        // Limpa os atributos do grupo após registrar todas as rotas
-        $this->currentGroup = [];
+        // Remove os atributos do grupo da pilha
+        array_pop($this->groupStack);
     }
 
     /**
@@ -119,15 +119,24 @@ class Router
         // Cria uma nova instância de RouteInstance
         $route = new RouteInstance($method, $uri, $action);
         
-        // Aplica os atributos do grupo atual à rota
-        if (!empty($this->currentGroup)) {
+        // Aplica os atributos de todos os grupos na pilha
+        foreach ($this->groupStack as $group) {
             // Aplica o prefixo se definido
-            if (isset($this->currentGroup['prefix'])) {
-                $route->prefix($this->currentGroup['prefix']);
+            if (isset($group['prefix'])) {
+                $currentPrefix = $route->getPrefix();
+                $newPrefix = $group['prefix'];
+                
+                // Combina os prefixos se já existir um
+                if ($currentPrefix !== null) {
+                    $newPrefix = rtrim($currentPrefix, '/') . '/' . ltrim($newPrefix, '/');
+                }
+                
+                $route->prefix($newPrefix);
             }
+            
             // Aplica os middlewares se definidos
-            if (isset($this->currentGroup['middleware'])) {
-                $route->middleware($this->currentGroup['middleware']);
+            if (isset($group['middleware'])) {
+                $route->middleware($group['middleware']);
             }
         }
 

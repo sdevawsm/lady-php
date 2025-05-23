@@ -4,6 +4,7 @@ namespace LadyPHP\Routing;
 
 use LadyPHP\Http\Request;
 use LadyPHP\Http\Response;
+use LadyPHP\Http\Middleware\Pipeline;
 
 /**
  * Classe RouteInstance
@@ -93,6 +94,11 @@ class RouteInstance
             return false;
         }
 
+        // Se a URI começa com /api, remove para o matching
+        if (strpos($uri, '/api') === 0) {
+            $uri = substr($uri, 4); // Remove '/api'
+        }
+
         $pattern = $this->getPattern();
         $matches = (bool) preg_match($pattern, $uri);
         
@@ -114,18 +120,26 @@ class RouteInstance
      */
     public function run(Request $request): Response
     {
-        // Executa os middlewares
+        // Cria o pipeline de middlewares
+        $pipeline = new Pipeline();
+
+        // Adiciona os middlewares da rota ao pipeline
         foreach ($this->middlewares as $middleware) {
-            // TODO: Implementar execução de middlewares
+            $pipeline->pipe($middleware);
         }
 
-        // Executa a ação
-        if (is_callable($this->action)) {
-            return call_user_func($this->action, $request);
-        }
+        // Define a ação final (a rota em si)
+        $destination = function ($request) {
+            if (is_callable($this->action)) {
+                return call_user_func($this->action, $request);
+            }
 
-        // TODO: Implementar execução de controller
-        return new Response('Not implemented', 501);
+            // TODO: Implementar execução de controller
+            return new Response('Not implemented', 501);
+        };
+
+        // Executa o pipeline
+        return $pipeline->process($request, $destination);
     }
 
     /**
@@ -146,6 +160,11 @@ class RouteInstance
 
         // Garante que a URI começa com /
         $uri = '/' . ltrim($uri, '/');
+
+        // Se a URI começa com /api, remove para o matching
+        if (strpos($uri, '/api') === 0) {
+            $uri = substr($uri, 4); // Remove '/api'
+        }
 
         // Converte parâmetros de rota em padrões regex
         $pattern = preg_replace('/\{([a-zA-Z]+)\}/', '(?P<$1>[^/]+)', $uri);
