@@ -1,33 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Bem-vindo ao LadyPHP</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            line-height: 1.6;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .content {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-        }
-        .footer {
-            margin-top: 30px;
-            text-align: center;
-            color: #666;
-        }
-    </style>
-</head>
-<body>
+@extends('layouts/app')
+
+@section('title', 'Bem-vindo ao LadyPHP')
+
+@section('content')
     <div class="header">
         <h1>Bem-vindo ao LadyPHP</h1>
         <p>Um framework PHP simples e elegante</p>
@@ -52,9 +27,30 @@
             </div>
         @endif
     </div>
+@endsection
 
-    <div class="footer">
-        <p>LadyPHP &copy; {{ $year }}</p>
-    </div>
-</body>
-</html> 
+@section('styles')
+<style>
+    .header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .content {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+    }
+    .content ul {
+        list-style: none;
+        padding: 0;
+    }
+    .content li {
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+    }
+    .content li:last-child {
+        border-bottom: none;
+    }
+</style>
+@endsection 
