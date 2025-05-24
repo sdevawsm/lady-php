@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use LadyPHP\Http\Controller;
+use App\Http\Controllers\Controller;
 use LadyPHP\Http\Request;
 use LadyPHP\Http\Response;
 
