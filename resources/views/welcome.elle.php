@@ -3,6 +3,7 @@
 @section('title', 'Bem-vindo ao LadyPHP')
 
 @section('content')
+    {{-- Cabeçalho da página --}}
     <div class="header">
         <h1>Bem-vindo ao LadyPHP</h1>
         <p>Um framework PHP simples e elegante</p>
@@ -16,9 +17,14 @@
         <h3>Recursos Disponíveis:</h3>
         <ul>
             <?php 
-            var_dump($features); // Debug para ver o conteúdo de $features
+            //var_dump($features);  // Debug para ver o conteúdo de $features
             echo "<!-- Debug: Iniciando foreach -->"; 
             ?>
+            
+            {{-- 
+                Lista de itens
+                Esta seção mostra os itens disponíveis
+            --}}
             @foreach($features as $feature)
                 <?php echo "<!-- Debug: Iterando feature: " . htmlspecialchars($feature) . " -->"; ?>
                 <li>{{ $feature }}</li>

@@ -1,5 +1,5 @@
 <?php $__sections = array (
-  'content' => '<div class="header">
+  'content' => '    <div class="header">
         <h1>Bem-vindo ao LadyPHP</h1>
         <p>Um framework PHP simples e elegante</p>
     </div>
@@ -9,19 +9,9 @@
         
         <h3>Recursos Disponíveis:</h3>
         <ul>
-            array(5) {
-  [0]=>
-  string(24) "Sistema de Rotas Simples"
-  [1]=>
-  string(20) "Validação de Dados"
-  [2]=>
-  string(23) "Sistema de Views (Elle)"
-  [3]=>
-  string(18) "Controladores HTTP"
-  [4]=>
-  string(14) "Respostas JSON"
-}
-<!-- Debug: Iniciando foreach -->                            <!-- Debug: Iterando feature: Sistema de Rotas Simples -->                <li>Sistema de Rotas Simples</li>
+            <!-- Debug: Iniciando foreach -->            
+            
+                            <!-- Debug: Iterando feature: Sistema de Rotas Simples -->                <li>Sistema de Rotas Simples</li>
                             <!-- Debug: Iterando feature: Validação de Dados -->                <li>Validação de Dados</li>
                             <!-- Debug: Iterando feature: Sistema de Views (Elle) -->                <li>Sistema de Views (Elle)</li>
                             <!-- Debug: Iterando feature: Controladores HTTP -->                <li>Controladores HTTP</li>

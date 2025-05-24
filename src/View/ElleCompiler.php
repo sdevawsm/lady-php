@@ -123,6 +123,9 @@ class ElleCompiler
 
     private function parseDirectives(string $content): string
     {
+        // Remove comentários {{-- --}} antes de processar outras diretivas
+        $content = preg_replace('/\{\{--(.*?)--\}\}/s', '', $content);
+
         // Primeiro, processa expressões com operador de coalescência nula
         $content = preg_replace_callback(
             '/\{\{\s*\$([a-zA-Z0-9_]+)\s*\?\?\s*([^}]+)\}\}/',
