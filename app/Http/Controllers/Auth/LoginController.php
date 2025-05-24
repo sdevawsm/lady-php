@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use LadyPHP\Http\Controller;
 use LadyPHP\Http\Request;
 use LadyPHP\Http\Response;
+use LadyPHP\Validation\ValidatorFactory;
 
 class LoginController extends Controller
 {
@@ -15,33 +16,46 @@ class LoginController extends Controller
 
     public function login(Request $request): Response
     {
-        // Usando dd() como no Laravel, sem necessidade de importação
-        dd([
-            'Método HTTP' => $request->method(),
-            'URI Completa' => $request->getUri(),
-            'Caminho' => $request->getPath(),
-            'Headers' => $request->headers(),
-            'Content Type' => $request->header('Content-Type'),
-            'É JSON?' => $request->isJson(),
-            'Dados GET' => $request->get(),
-            'Dados POST' => $request->post(),
-            'Dados JSON' => $request->json(),
-            'Todos os Dados' => $request->all(),
-            'Dados do Servidor' => [
-                'REQUEST_METHOD' => $request->server['REQUEST_METHOD'] ?? null,
-                'REQUEST_URI' => $request->server['REQUEST_URI'] ?? null,
-                'HTTP_HOST' => $request->server['HTTP_HOST'] ?? null,
-                'REMOTE_ADDR' => $request->server['REMOTE_ADDR'] ?? null,
-                'HTTP_USER_AGENT' => $request->server['HTTP_USER_AGENT'] ?? null,
-            ],
-            'Cookies' => $request->cookie(),
-            'Arquivos' => $request->file()
-        ]);
+        $data = $request->all();
+        
+        // Define as regras de validação
+        $rules = [
+            'name' => 'required|min:3',
+            'email' => 'required|email',
+            'password' => 'required|min:6',
+            'age' => 'required|numeric|min:18',
+            'website' => 'url',
+            'phone' => 'required|min:10',
+            'interests' => 'required|array|min:1'
+        ];
 
-        // Exemplos de uso dos novos métodos:
-        // dd($request->cookie('session'));
-        // dd($request->cookies());
-        // dd($request->hasFile('avatar'));
-        // dd($request->file('avatar'));
+        // Define as mensagens de erro personalizadas
+        $messages = [
+            'name.required' => 'O nome é obrigatório',
+            'name.min' => 'O nome deve ter pelo menos 3 caracteres',
+            'email.required' => 'O email é obrigatório',
+            'email.email' => 'Digite um email válido',
+            'password.required' => 'A senha é obrigatória',
+            'password.min' => 'A senha deve ter pelo menos 6 caracteres',
+            'age.required' => 'A idade é obrigatória',
+            'age.numeric' => 'A idade deve ser um número',
+            'age.min' => 'Você deve ter pelo menos 18 anos',
+            'website.url' => 'Digite uma URL válida',
+            'phone.required' => 'O telefone é obrigatório',
+            'phone.min' => 'O telefone deve ter pelo menos 10 dígitos',
+            'interests.required' => 'Selecione pelo menos um interesse',
+            'interests.array' => 'Os interesses devem ser selecionados corretamente',
+            'interests.min' => 'Selecione pelo menos um interesse'
+        ];
+
+        // Valida os dados
+        $result = ValidatorFactory::validate($data, $rules, $messages);
+
+        // Retorna o resultado em JSON
+        return $this->json([
+            'success' => $result['success'],
+            'data' => $data,
+            'errors' => $result['errors'] ?? null
+        ], $result['success'] ? 200 : 422);
     }
 }
