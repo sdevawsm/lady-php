@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
-use LadyPHP\Database\Model;
+use App\Models\Base\Model;
+use App\Models\Traits\HasTimestamps;
 
 class Product extends Model
 {
+    use HasTimestamps;
+
     protected static string $table = 'products';
     
     protected static array $fillable = [
@@ -15,7 +18,9 @@ class Product extends Model
         'price',
         'stock',
         'active',
-        'category_id'
+        'category_id',
+        'created_at',
+        'updated_at'
     ];
 
     /**

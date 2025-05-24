@@ -2,17 +2,22 @@
 
 namespace App\Models;
 
-use LadyPHP\Database\Model;
+use App\Models\Base\Model;
+use App\Models\Traits\HasTimestamps;
 
 class Category extends Model
 {
+    use HasTimestamps;
+
     protected static string $table = 'categories';
     
     protected static array $fillable = [
         'name',
         'slug',
         'description',
-        'active'
+        'active',
+        'created_at',
+        'updated_at'
     ];
 
     /**
