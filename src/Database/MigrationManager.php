@@ -70,32 +70,33 @@ class MigrationManager
     }
 
     /**
-     * Reverte a última migração executada
+     * Reverte um número específico de migrações
      */
-    public function rollback(): array
+    public function rollback(int $steps = 1): array
     {
-        $batch = $this->getLastBatchNumber();
-        if (!$batch) {
+        $batches = $this->getLastBatches($steps);
+        if (empty($batches)) {
             return ['message' => 'Nothing to rollback.'];
         }
 
-        $files = $this->getMigrationsForBatch($batch);
         $rolledBack = [];
+        foreach ($batches as $batch) {
+            $files = $this->getMigrationsForBatch($batch);
+            foreach (array_reverse($files) as $file) {
+                try {
+                    $className = 'Database\\Migrations\\' . $this->getMigrationClassName($file);
+                    require_once $file;
+                    
+                    $migration = new $className($this->pdo);
+                    $migration->down();
 
-        foreach (array_reverse($files) as $file) {
-            try {
-                $className = 'Database\\Migrations\\' . $this->getMigrationClassName($file);
-                require_once $file;
-                
-                $migration = new $className($this->pdo);
-                $migration->down();
+                    $this->pdo->prepare("DELETE FROM {$this->migrationsTable} WHERE migration = ?")
+                        ->execute([basename($file)]);
 
-                $this->pdo->prepare("DELETE FROM {$this->migrationsTable} WHERE migration = ?")
-                    ->execute([basename($file)]);
-
-                $rolledBack[] = basename($file);
-            } catch (\Exception $e) {
-                throw new \Exception("Error rolling back migration {$file}: " . $e->getMessage());
+                    $rolledBack[] = basename($file);
+                } catch (\Exception $e) {
+                    throw new \Exception("Error rolling back migration {$file}: " . $e->getMessage());
+                }
             }
         }
 
@@ -103,6 +104,103 @@ class MigrationManager
             'message' => count($rolledBack) . ' migrations rolled back successfully.',
             'migrations' => $rolledBack
         ];
+    }
+
+    /**
+     * Reverte todas as migrações
+     */
+    public function rollbackAll(): array
+    {
+        $batches = $this->getAllBatches();
+        if (empty($batches)) {
+            return ['message' => 'Nothing to rollback.'];
+        }
+
+        $rolledBack = [];
+        foreach (array_reverse($batches) as $batch) {
+            $files = $this->getMigrationsForBatch($batch);
+            foreach (array_reverse($files) as $file) {
+                try {
+                    $className = 'Database\\Migrations\\' . $this->getMigrationClassName($file);
+                    require_once $file;
+                    
+                    $migration = new $className($this->pdo);
+                    $migration->down();
+
+                    $this->pdo->prepare("DELETE FROM {$this->migrationsTable} WHERE migration = ?")
+                        ->execute([basename($file)]);
+
+                    $rolledBack[] = basename($file);
+                } catch (\Exception $e) {
+                    throw new \Exception("Error rolling back migration {$file}: " . $e->getMessage());
+                }
+            }
+        }
+
+        return [
+            'message' => count($rolledBack) . ' migrations rolled back successfully.',
+            'migrations' => $rolledBack
+        ];
+    }
+
+    /**
+     * Remove todas as tabelas do banco de dados
+     */
+    public function dropAllTables(): void
+    {
+        $tables = $this->getAllTables();
+        foreach ($tables as $table) {
+            if ($table !== $this->migrationsTable) {
+                $this->pdo->exec("DROP TABLE IF EXISTS `{$table}`");
+            }
+        }
+    }
+
+    /**
+     * Retorna o status de todas as migrações
+     */
+    public function getMigrationStatus(): array
+    {
+        $files = glob($this->migrationsPath . '/*.php');
+        $executed = $this->getExecutedMigrations();
+        
+        $status = [];
+        foreach ($files as $file) {
+            $migration = basename($file);
+            $status[] = [
+                'migration' => $migration,
+                'ran' => in_array($migration, $executed)
+            ];
+        }
+        
+        return $status;
+    }
+
+    /**
+     * Retorna todas as tabelas do banco de dados
+     */
+    private function getAllTables(): array
+    {
+        $stmt = $this->pdo->query("SHOW TABLES");
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    /**
+     * Retorna os últimos N batches
+     */
+    private function getLastBatches(int $count): array
+    {
+        $stmt = $this->pdo->query("SELECT DISTINCT batch FROM {$this->migrationsTable} ORDER BY batch DESC LIMIT " . $count);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    /**
+     * Retorna todos os batches
+     */
+    private function getAllBatches(): array
+    {
+        $stmt = $this->pdo->query("SELECT DISTINCT batch FROM {$this->migrationsTable} ORDER BY batch");
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
     /**
@@ -177,15 +275,6 @@ PHP;
     {
         $stmt = $this->pdo->query("SELECT MAX(batch) FROM {$this->migrationsTable}");
         return (int)$stmt->fetchColumn() + 1;
-    }
-
-    /**
-     * Retorna o número do último batch
-     */
-    private function getLastBatchNumber(): ?int
-    {
-        $stmt = $this->pdo->query("SELECT MAX(batch) FROM {$this->migrationsTable}");
-        return $stmt->fetchColumn() ?: null;
     }
 
     /**

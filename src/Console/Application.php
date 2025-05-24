@@ -71,6 +71,20 @@ class Application
             return;
         }
 
+        // Tenta encontrar um comando que aceite subcomandos
+        foreach ($this->commands as $name => $cmd) {
+            if (str_starts_with($command, $name . ':')) {
+                // Remove o nome do comando principal e mantém apenas o subcomando
+                $subcommand = substr($command, strlen($name) + 1);
+                array_unshift($arguments, $subcommand);
+                
+                $cmd->setArguments($arguments);
+                $cmd->setOptions($options);
+                $cmd->handle();
+                return;
+            }
+        }
+
         $this->error("Command '{$command}' not found.");
         $this->showHelp();
     }
@@ -87,6 +101,14 @@ class Application
 
         foreach ($this->commands as $name => $command) {
             echo "  {$name}\n";
+            // Se o comando tiver subcomandos, mostra-os também
+            if ($command instanceof MigrateCommand) {
+                echo "    migrate:status       Show the status of each migration\n";
+                echo "    migrate:rollback     Rollback the last migration batch\n";
+                echo "    migrate:fresh        Drop all tables and re-run all migrations\n";
+                echo "    migrate:refresh      Rollback all migrations and re-run them\n";
+                echo "    migrate:reset        Rollback all migrations\n";
+            }
         }
 
         echo "\n";

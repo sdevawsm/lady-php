@@ -34,6 +34,50 @@ class MigrateCommand extends Command
 
     public function handle(): void
     {
+        $command = $this->argument(0);
+        
+        // Se não houver subcomando, executa migrate por padrão
+        if (empty($command)) {
+            $this->migrate();
+            return;
+        }
+
+        // Remove o prefixo 'migrate:' se existir
+        $command = str_replace('migrate:', '', $command);
+
+        switch ($command) {
+            case 'migrate':
+                $this->migrate();
+                break;
+            
+            case 'rollback':
+                $steps = (int)($this->argument(1) ?? 1);
+                $this->rollback($steps);
+                break;
+            
+            case 'fresh':
+                $this->fresh();
+                break;
+            
+            case 'refresh':
+                $this->refresh();
+                break;
+            
+            case 'reset':
+                $this->reset();
+                break;
+            
+            case 'status':
+                $this->status();
+                break;
+            
+            default:
+                $this->showHelp();
+        }
+    }
+
+    private function migrate(): void
+    {
         try {
             $result = $this->manager->migrate();
             $this->success($result['message']);
@@ -49,10 +93,10 @@ class MigrateCommand extends Command
         }
     }
 
-    private function rollback(): void
+    private function rollback(int $steps = 1): void
     {
         try {
-            $result = $this->manager->rollback();
+            $result = $this->manager->rollback($steps);
             $this->success($result['message']);
             
             if (!empty($result['migrations'])) {
@@ -66,11 +110,74 @@ class MigrateCommand extends Command
         }
     }
 
-    private function make(string $name): void
+    private function fresh(): void
     {
         try {
-            $path = $this->manager->create($name);
-            $this->success("Migration created: {$path}");
+            $this->info("Dropping all tables...");
+            $this->manager->dropAllTables();
+            
+            $this->info("Running all migrations...");
+            $this->migrate();
+            
+            $this->success("Database has been recreated successfully.");
+        } catch (\Exception $e) {
+            $this->error("Error: " . $e->getMessage());
+        }
+    }
+
+    private function refresh(): void
+    {
+        try {
+            $this->info("Rolling back all migrations...");
+            $this->manager->rollbackAll();
+            
+            $this->info("Running all migrations...");
+            $this->migrate();
+            
+            $this->success("Database has been refreshed successfully.");
+        } catch (\Exception $e) {
+            $this->error("Error: " . $e->getMessage());
+        }
+    }
+
+    private function reset(): void
+    {
+        try {
+            $result = $this->manager->rollbackAll();
+            $this->success($result['message']);
+            
+            if (!empty($result['migrations'])) {
+                $this->info("Migrations rolled back:");
+                foreach ($result['migrations'] as $migration) {
+                    $this->info("- {$migration}");
+                }
+            }
+        } catch (\Exception $e) {
+            $this->error("Error: " . $e->getMessage());
+        }
+    }
+
+    private function status(): void
+    {
+        try {
+            $status = $this->manager->getMigrationStatus();
+            
+            if (empty($status)) {
+                $this->info("No migrations found.");
+                return;
+            }
+
+            $this->info("\nMigration Status:");
+            $this->info("----------------");
+            
+            foreach ($status as $migration) {
+                $status = $migration['ran'] ? "\033[32m✓ Ran\033[0m" : "\033[31m✗ Pending\033[0m";
+                $this->info(sprintf(
+                    "%s %s",
+                    $status,
+                    $migration['migration']
+                ));
+            }
         } catch (\Exception $e) {
             $this->error("Error: " . $e->getMessage());
         }
@@ -79,8 +186,13 @@ class MigrateCommand extends Command
     private function showHelp(): void
     {
         echo "\nMigration Commands:\n\n";
-        echo "  migrate          Run all pending migrations\n";
-        echo "  rollback         Rollback the last migration batch\n";
-        echo "  make <name>      Create a new migration file\n\n";
+        echo "  migrate              Run all pending migrations\n";
+        echo "  migrate:rollback     Rollback the last migration batch\n";
+        echo "  migrate:fresh        Drop all tables and re-run all migrations\n";
+        echo "  migrate:refresh      Rollback all migrations and re-run them\n";
+        echo "  migrate:reset        Rollback all migrations\n";
+        echo "  migrate:status       Show the status of each migration\n\n";
+        echo "Options:\n";
+        echo "  --steps=<number>     The number of migrations to rollback\n\n";
     }
 } 
