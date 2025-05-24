@@ -15,9 +15,9 @@ use LadyPHP\Http\Response;
 class Pipeline
 {
     /**
-     * Lista de middlewares a serem executados
+     * Lista de middlewares no pipeline
      */
-    protected array $middlewares = [];
+    protected array $pipes = [];
 
     /**
      * Adiciona um middleware ao pipeline
@@ -27,7 +27,20 @@ class Pipeline
      */
     public function pipe($middleware): self
     {
-        $this->middlewares[] = $middleware;
+        // Se for uma string (nome da classe), instancia o middleware
+        if (is_string($middleware)) {
+            if (!class_exists($middleware)) {
+                throw new \Exception("Middleware class {$middleware} not found");
+            }
+            $middleware = new $middleware();
+        }
+
+        // Verifica se o middleware implementa a interface
+        if (!$middleware instanceof MiddlewareInterface) {
+            throw new \Exception("Middleware deve implementar LadyPHP\\Http\\Middleware\\MiddlewareInterface");
+        }
+
+        $this->pipes[] = $middleware;
         return $this;
     }
 
@@ -40,30 +53,24 @@ class Pipeline
      */
     public function process(Request $request, callable $destination): Response
     {
-        // Cria o pipeline reverso (último middleware é executado primeiro)
-        $pipeline = array_reduce(
-            array_reverse($this->middlewares),
-            function ($next, $middleware) {
-                return function ($request) use ($next, $middleware) {
-                    // Se o middleware for uma string (nome da classe), instancia ele
-                    if (is_string($middleware)) {
-                        $middleware = new $middleware();
-                    }
+        // Se não houver middlewares, executa o destino diretamente
+        if (empty($this->pipes)) {
+            return $destination($request);
+        }
 
-                    // Verifica se o middleware implementa a interface
-                    if (!$middleware instanceof MiddlewareInterface) {
-                        throw new \RuntimeException(
-                            'Middleware deve implementar ' . MiddlewareInterface::class
-                        );
-                    }
+        // Cria o closure que será executado pelo middleware
+        $next = function (Request $request) use ($destination) {
+            return $destination($request);
+        };
 
-                    return $middleware->handle($request, $next);
-                };
-            },
-            $destination
-        );
+        // Executa os middlewares em ordem reversa
+        foreach (array_reverse($this->pipes) as $pipe) {
+            $next = function (Request $request) use ($pipe, $next) {
+                return $pipe->handle($request, $next);
+            };
+        }
 
-        // Executa o pipeline
-        return $pipeline($request);
+        // Executa o primeiro middleware
+        return $next($request);
     }
 } 

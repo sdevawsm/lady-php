@@ -5,6 +5,7 @@ namespace LadyPHP\Routing;
 use LadyPHP\Http\Request;
 use LadyPHP\Http\Response;
 use LadyPHP\Http\Middleware\Pipeline;
+use LadyPHP\Http\Middleware\BasicMiddleware;
 
 /**
  * Classe RouteInstance
@@ -120,30 +121,37 @@ class RouteInstance
      */
     public function run(Request $request): Response
     {
-        // Cria o pipeline de middlewares
-        $pipeline = new Pipeline();
+        // Se não houver middlewares, usa o BasicMiddleware
+        if (empty($this->middlewares)) {
+            $this->middlewares = [new BasicMiddleware()];
+        }
 
-        // Adiciona os middlewares da rota ao pipeline
+        // Processar middlewares
+        $pipeline = new Pipeline();
         foreach ($this->middlewares as $middleware) {
             $pipeline->pipe($middleware);
         }
 
-        // Define a ação final (a rota em si)
-        $destination = function ($request) {
+        // Adiciona o handler da rota como destino final
+        return $pipeline->process($request, function (Request $request) {
+            // Extrair parâmetros da rota
+            $parameters = [];
+            if (preg_match($this->getPattern(), $request->getPathInfo(), $matches)) {
+                foreach ($matches as $key => $value) {
+                    if (is_string($key)) {
+                        $parameters[$key] = $value;
+                    }
+                }
+            }
+
+            // Se for uma closure, executa ela
             if (is_callable($this->action)) {
-                return call_user_func($this->action, $request);
+                return call_user_func_array($this->action, array_merge([$request], $parameters));
             }
 
-            // Se a ação for uma string no formato "Controller@method"
-            if (is_string($this->action)) {
-                return $this->runController($request);
-            }
-
-            return new Response('Invalid route action', 500);
-        };
-
-        // Executa o pipeline
-        return $pipeline->process($request, $destination);
+            // Se for uma string (Controller@method), executa o controller
+            return $this->runController($request);
+        });
     }
 
     /**

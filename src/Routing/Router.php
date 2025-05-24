@@ -4,6 +4,7 @@ namespace LadyPHP\Routing;
 
 use LadyPHP\Http\Request;
 use LadyPHP\Http\Response;
+use LadyPHP\Http\Middleware\MiddlewareInterface;
 
 /**
  * Classe Router
@@ -154,11 +155,12 @@ class Router
      *
      * @param Request $request Requisição atual
      * @return Response
+     * @throws \Exception Se a rota não for encontrada
      */
     public function dispatch(Request $request): Response
     {
         $method = $request->getMethod();
-        $uri = $request->getPath();
+        $uri = $request->getPathInfo();
 
         // Debug: Mostrar rotas registradas
         error_log("Rotas registradas:");
@@ -179,7 +181,7 @@ class Router
             }
         }
 
-        // Retorna 404 se nenhuma rota for encontrada
-        return new Response('Route not found', 404);
+        // Se nenhuma rota foi encontrada, lança exceção
+        throw new \Exception("Route not found: {$method} {$uri}");
     }
 } 

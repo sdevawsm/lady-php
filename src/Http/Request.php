@@ -75,7 +75,7 @@ class Request
      */
     public function getMethod(): string
     {
-        return strtoupper($this->server['REQUEST_METHOD'] ?? 'GET');
+        return $_SERVER['REQUEST_METHOD'];
     }
 
     /**
@@ -103,6 +103,26 @@ class Request
         }
         
         return $uri;
+    }
+
+    /**
+     * Retorna o caminho da URI da requisição
+     * Ex: /produtos/1 retorna /produtos/1
+     */
+    public function getPathInfo(): string
+    {
+        $uri = $_SERVER['REQUEST_URI'] ?? '/';
+        
+        // Remove query string se existir
+        if (($pos = strpos($uri, '?')) !== false) {
+            $uri = substr($uri, 0, $pos);
+        }
+        
+        // Remove trailing slash
+        $uri = rtrim($uri, '/');
+        
+        // Garante que começa com /
+        return '/' . ltrim($uri, '/');
     }
 
     /**
@@ -437,5 +457,14 @@ class Request
         }
 
         return $this->hasFile($key) ? $this->files[$key] : null;
+    }
+
+    /**
+     * Verifica se a requisição é do tipo AJAX
+     */
+    public function isAjax(): bool
+    {
+        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+               strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
     }
 } 

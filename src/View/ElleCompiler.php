@@ -79,17 +79,17 @@ class ElleCompiler
         }
 
         // Primeiro, lê o conteúdo da view para verificar o layout
-        $viewContent = file_get_contents($viewFile);
-        
+            $viewContent = file_get_contents($viewFile);
+            
         // Verifica se há @extends e processa o layout
         if (preg_match('/@extends\s*\(\s*[\'"]([^\'"]+)[\'"]\s*\)/', $viewContent, $matches)) {
             $this->currentLayout = $matches[1];
-            $layoutFile = $this->viewPath . '/' . $this->currentLayout . '.elle.php';
+                $layoutFile = $this->viewPath . '/' . $this->currentLayout . '.elle.php';
             
             // Se o layout não existe, lança exceção
-            if (!file_exists($layoutFile)) {
-                throw new \Exception("Layout {$this->currentLayout} não encontrado");
-            }
+                if (!file_exists($layoutFile)) {
+                    throw new \Exception("Layout {$this->currentLayout} não encontrado");
+                }
             
             // Verifica se o arquivo de cache precisa ser atualizado
             if ($this->needsRecompilation($viewFile, $cacheFile)) {
@@ -111,9 +111,9 @@ class ElleCompiler
             // Se não há layout, verifica apenas a view
             if ($this->needsRecompilation($viewFile, $cacheFile)) {
                 $compiled = $this->parseDirectives($viewContent);
-                
-                if (file_put_contents($cacheFile, $compiled) === false) {
-                    throw new \Exception("Não foi possível escrever no arquivo de cache: {$cacheFile}");
+
+            if (file_put_contents($cacheFile, $compiled) === false) {
+                throw new \Exception("Não foi possível escrever no arquivo de cache: {$cacheFile}");
                 }
             }
         }

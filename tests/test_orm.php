@@ -5,13 +5,17 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use App\Models\Category;
 use App\Models\Product;
 use LadyPHP\Database\Model;
+use LadyPHP\Database\Config;
 
-// Configurar conexão PDO
+// Carregar configurações do .env
+Config::load();
+
+// Configurar conexão PDO usando as configurações do .env
 $pdo = new PDO(
-    'mysql:host=localhost;dbname=ladyphp;charset=utf8mb4',
-    'root',
-    '',
-    [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+    Config::getDsn(),
+    Config::getCredentials()['username'],
+    Config::getCredentials()['password'],
+    Config::getPdoOptions()
 );
 
 Model::setConnection($pdo);
