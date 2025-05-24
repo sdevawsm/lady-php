@@ -227,7 +227,7 @@ use LadyPHP\Database\Blueprint;
 
 class {$className} extends Migration
 {
-    public function up()
+    public function up(): void
     {
         \$this->schema->create('table_name', function (Blueprint \$table) {
             \$table->id();
@@ -235,7 +235,7 @@ class {$className} extends Migration
         });
     }
 
-    public function down()
+    public function down(): void
     {
         \$this->schema->drop('table_name');
     }

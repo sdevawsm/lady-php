@@ -70,6 +70,15 @@ class Blueprint
     }
 
     /**
+     * Adiciona uma coluna decimal
+     */
+    public function decimal(string $column, int $total = 8, int $places = 2): self
+    {
+        $this->columns[] = "`{$column}` DECIMAL({$total}, {$places})";
+        return $this;
+    }
+
+    /**
      * Adiciona uma coluna boolean
      */
     public function boolean(string $column): self
@@ -114,6 +123,18 @@ class Blueprint
     {
         $lastColumn = array_pop($this->columns);
         $this->columns[] = $lastColumn . " NOT NULL";
+        return $this;
+    }
+
+    /**
+     * Define uma coluna como única
+     */
+    public function unique(): self
+    {
+        $lastColumn = array_pop($this->columns);
+        $columnName = trim(explode(' ', $lastColumn)[0], '`');
+        $this->indexes[] = "UNIQUE KEY `uk_{$this->table}_{$columnName}` (`{$columnName}`)";
+        $this->columns[] = $lastColumn;
         return $this;
     }
 
@@ -165,5 +186,23 @@ class Blueprint
     public function addForeignKey(string $sql): void
     {
         $this->foreignKeys[] = $sql;
+    }
+
+    /**
+     * Retorna o nome da tabela
+     */
+    public function getTable(): string
+    {
+        return $this->table;
+    }
+
+    /**
+     * Define uma coluna como unsigned
+     */
+    public function unsigned(): self
+    {
+        $lastColumn = array_pop($this->columns);
+        $this->columns[] = $lastColumn . " UNSIGNED";
+        return $this;
     }
 } 
