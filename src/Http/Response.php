@@ -42,9 +42,13 @@ class Response
     {
         $this->content = $content;
         $this->statusCode = $statusCode;
-        $this->headers = array_merge([
-            'Content-Type' => 'text/html; charset=UTF-8'
-        ], $headers);
+        $this->headers = $headers;
+
+        // Define Content-Type apenas se não for um redirecionamento e não tiver sido definido
+        // e não tiver sido passado nenhum header (mesmo que vazio)
+        if (($statusCode < 300 || $statusCode >= 400) && !isset($this->headers['Content-Type']) && $headers === []) {
+            $this->headers['Content-Type'] = 'text/html; charset=UTF-8';
+        }
     }
 
     /**
@@ -101,7 +105,13 @@ class Response
 
         // Envia os headers
         foreach ($this->headers as $name => $value) {
-            header("$name: $value");
+            if (is_array($value)) {
+                foreach ($value as $v) {
+                    header("$name: $v", false);
+                }
+            } else {
+                header("$name: $value");
+            }
         }
 
         // Envia o conteúdo
@@ -170,5 +180,43 @@ class Response
     public function getHeader(string $name): ?string
     {
         return $this->headers[$name] ?? null;
+    }
+
+    /**
+     * Define um cookie na resposta
+     * 
+     * @param string $name Nome do cookie
+     * @param string $value Valor do cookie
+     * @param int $expire Tempo de expiração em segundos (0 = sessão)
+     * @param string $path Caminho do cookie
+     * @param string $domain Domínio do cookie
+     * @param bool $secure Cookie só via HTTPS
+     * @param bool $httpOnly Cookie não acessível via JavaScript
+     * @return self
+     */
+    public function cookie(
+        string $name,
+        string $value,
+        int $expire = 0,
+        string $path = '/',
+        string $domain = '',
+        bool $secure = false,
+        bool $httpOnly = true
+    ): self {
+        $cookie = sprintf(
+            '%s=%s; Max-Age=%d; Path=%s%s%s%s',
+            $name,
+            $value,
+            $expire,
+            $path,
+            $domain ? "; Domain={$domain}" : '',
+            $secure ? '; Secure' : '',
+            $httpOnly ? '; HttpOnly' : ''
+        );
+
+        // Define o cookie como um array com um único elemento
+        $this->headers['set-cookie'] = [$cookie];
+
+        return $this;
     }
 } 
