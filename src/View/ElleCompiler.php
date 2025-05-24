@@ -74,9 +74,21 @@ class ElleCompiler
 
     private function parseDirectives(string $content): string
     {
+        // Primeiro, processa expressões com operador de coalescência nula
+        $content = preg_replace_callback(
+            '/\{\{\s*\$([a-zA-Z0-9_]+)\s*\?\?\s*([^}]+)\}\}/',
+            function($matches) {
+                $var = trim($matches[1]);
+                $fallback = trim($matches[2]);
+                return '<?php echo htmlspecialchars(isset($' . $var . ') ? $' . $var . ' : ' . $fallback . '); ?>';
+            },
+            $content
+        );
+
+        // Depois processa as outras diretivas
         $patterns = [
             // {{ $variavel }}
-            '/\{\{\s*\$([a-zA-Z0-9_]+)\s*\}\}/' => '<?php echo htmlspecialchars($this->data["$1"] ?? ""); ?>',
+            '/\{\{\s*\$([a-zA-Z0-9_]+)\s*\}\}/' => '<?php echo htmlspecialchars($$1 ?? ""); ?>',
             
             // @if(condição)
             '/@if\s*\((.*?)\)/' => '<?php if($1): ?>',
@@ -91,13 +103,13 @@ class ElleCompiler
             '/@endif/' => '<?php endif; ?>',
             
             // @foreach($array as $item)
-            '/@foreach\s*\(\s*\$([a-zA-Z0-9_]+)\s+as\s+\$([a-zA-Z0-9_]+)\s*\)/' => '<?php foreach($this->data["$1"] ?? [] as $$2): ?>',
+            '/@foreach\s*\(\s*\$([a-zA-Z0-9_]+)\s+as\s+\$([a-zA-Z0-9_]+)\s*\)/' => '<?php foreach($$1 ?? [] as $$2): ?>',
             
             // @endforeach
             '/@endforeach/' => '<?php endforeach; ?>',
             
             // @include('view')
-            '/@include\s*\(\s*[\'"]([^\'"]+)[\'"]\s*\)/' => '<?php include $this->compile("$1", $this->data); ?>'
+            '/@include\s*\(\s*[\'"]([^\'"]+)[\'"]\s*\)/' => '<?php include $this->compile("$1", get_defined_vars()); ?>'
         ];
 
         return preg_replace(array_keys($patterns), array_values($patterns), $content);
@@ -122,29 +134,33 @@ class ElleCompiler
 
     private function parseLayout(string $content): string
     {
-        // Converte as diretivas do Elle para PHP, mas apenas as necessárias para o layout
+        // Processa todas as diretivas do layout, incluindo variáveis e expressões
         $patterns = [
+            // {{ $variavel ?? expressao }}
+            '/\{\{\s*\$([a-zA-Z0-9_]+)\s*\?\?\s*([^}]+)\}\}/' => function($matches) {
+                $var = trim($matches[1]);
+                $fallback = trim($matches[2]);
+                return '<?php echo htmlspecialchars(isset($' . $var . ') ? $' . $var . ' : ' . $fallback . '); ?>';
+            },
+            
             // {{ $variavel }}
-            '/\{\{\s*\$([a-zA-Z0-9_]+)\s*\}\}/' => '<?php echo htmlspecialchars($this->data["$1"] ?? ""); ?>',
+            '/\{\{\s*\$([a-zA-Z0-9_]+)\s*\}\}/' => '<?php echo htmlspecialchars($$1 ?? ""); ?>',
             
             // @yield('nome', 'valor padrão')
             '/@yield\s*\(\s*[\'"]([^\'"]+)[\'"]\s*(?:,\s*[\'"]([^\'"]*)[\'"])?\s*\)/' => function($matches) {
                 $name = $matches[1];
                 $default = $matches[2] ?? '';
-                return '<?php echo isset($this->sections["' . $name . '"]) ? $this->sections["' . $name . '"] : "' . $default . '"; ?>';
+                return '<?php echo isset($__sections["' . $name . '"]) ? $__sections["' . $name . '"] : "' . $default . '"; ?>';
             }
         ];
 
-        $content = preg_replace_callback(array_keys($patterns), function($matches) use ($patterns) {
-            $pattern = $matches[0];
-            $replacement = $patterns[$pattern];
-            
+        foreach ($patterns as $pattern => $replacement) {
             if (is_callable($replacement)) {
-                return $replacement($matches);
+                $content = preg_replace_callback($pattern, $replacement, $content);
+            } else {
+                $content = preg_replace($pattern, $replacement, $content);
             }
-            
-            return $replacement;
-        }, $content);
+        }
         
         return $content;
     }

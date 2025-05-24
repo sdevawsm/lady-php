@@ -26,7 +26,14 @@ class View
         $compiledFile = self::$compiler->compile($view, $data);
         
         ob_start();
-        include $compiledFile;
+        // Cria uma função anônima para encapsular o contexto
+        $renderView = function($__file, $__data) {
+            extract($__data);
+            include $__file;
+        };
+        
+        // Executa a função com o arquivo compilado e os dados
+        $renderView($compiledFile, $data);
         $content = ob_get_clean();
 
         return new Response($content);
