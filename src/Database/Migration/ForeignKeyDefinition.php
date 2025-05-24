@@ -1,6 +1,8 @@
 <?php
 
-namespace LadyPHP\Database;
+namespace LadyPHP\Database\Migration;
+
+use LadyPHP\Database\Migration\Blueprint;
 
 class ForeignKeyDefinition
 {

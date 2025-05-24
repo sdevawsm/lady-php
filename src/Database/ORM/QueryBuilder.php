@@ -1,8 +1,9 @@
 <?php
 
-namespace LadyPHP\Database;
+namespace LadyPHP\Database\ORM;
 
 use PDO;
+use App\Models\Base\Model;
 
 class QueryBuilder
 {
@@ -182,7 +183,7 @@ class QueryBuilder
     /**
      * Retorna o primeiro registro
      */
-    public function first(): ?Model
+    public function first(): ?object
     {
         $this->limit(1);
         $results = $this->get();
@@ -203,23 +204,24 @@ class QueryBuilder
             'bindings' => $bindings
         ]);
         
-        $stmt = $this->model::getConnection()->prepare($sql);
+        $stmt = Model::getConnection()->prepare($sql);
         $stmt->execute($bindings);
         
-        $models = [];
+        $results = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $models[] = $this->model::newFromBuilder($row);
+            $model = new $this->model;
+            $results[] = $model->newFromBuilder($row);
         }
 
         if (!empty($this->with)) {
-            $this->eagerLoadRelations($models);
+            $this->eagerLoadRelations($results);
         }
 
         if (!empty($this->withCount)) {
-            $this->loadCount($models);
+            $this->loadCount($results);
         }
 
-        return $models;
+        return $results;
     }
 
     /**
@@ -229,7 +231,7 @@ class QueryBuilder
     {
         $this->selects = ['COUNT(*) as count'];
         $sql = $this->toSql();
-        $stmt = $this->model::getConnection()->prepare($sql);
+        $stmt = Model::getConnection()->prepare($sql);
         $stmt->execute($this->getBindings());
         return (int) $stmt->fetch(PDO::FETCH_ASSOC)['count'];
     }

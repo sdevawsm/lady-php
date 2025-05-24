@@ -4,8 +4,8 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Models\Category;
 use App\Models\Product;
-use LadyPHP\Database\Model;
-use LadyPHP\Database\Config;
+use App\Models\Base\Model;
+use LadyPHP\Database\Config\Config;
 
 // Carregar configurações do .env
 Config::load();

@@ -1,23 +1,38 @@
 <?php
 
-namespace LadyPHP\Database;
+namespace LadyPHP\Database\Migration;
 
 use PDO;
+use LadyPHP\Database\Migration\Schema;
+use LadyPHP\Database\Migration\Blueprint;
 
-class Schema
+abstract class Migration
 {
-    private PDO $connection;
+    protected PDO $connection;
+    protected Schema $schema;
 
     public function __construct(PDO $connection)
     {
         $this->connection = $connection;
+        $this->schema = new Schema($connection);
     }
+
+    /**
+     * Executa a migração
+     */
+    abstract public function up(): void;
+
+    /**
+     * Reverte a migração
+     */
+    abstract public function down(): void;
 
     /**
      * Cria uma nova tabela
      */
-    public function create(string $table, callable $callback): void
+    protected function createTable(string $table, callable $callback): void
     {
+        $this->table = $table;
         $blueprint = new Blueprint($table);
         $callback($blueprint);
         
@@ -28,15 +43,15 @@ class Schema
     /**
      * Remove uma tabela
      */
-    public function drop(string $table): void
+    protected function dropTable(string $table): void
     {
-        $this->connection->exec("DROP TABLE IF EXISTS `{$table}`");
+        $this->connection->exec("DROP TABLE IF EXISTS {$table}");
     }
 
     /**
      * Verifica se uma tabela existe
      */
-    public function hasTable(string $table): bool
+    protected function hasTable(string $table): bool
     {
         $sql = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?";
         $stmt = $this->connection->prepare($sql);
@@ -47,7 +62,7 @@ class Schema
     /**
      * Verifica se uma coluna existe em uma tabela
      */
-    public function hasColumn(string $table, string $column): bool
+    protected function hasColumn(string $table, string $column): bool
     {
         $sql = "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?";
         $stmt = $this->connection->prepare($sql);

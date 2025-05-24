@@ -1,9 +1,11 @@
 <?php
 
-namespace LadyPHP\Database;
+namespace LadyPHP\Database\Migration;
 
 use PDO;
 use PDOException;
+use LadyPHP\Database\Migration\Migration;
+use LadyPHP\Database\Migration\Blueprint;
 
 class MigrationManager
 {
@@ -222,8 +224,8 @@ class MigrationManager
 
 namespace Database\Migrations;
 
-use LadyPHP\Database\Migration;
-use LadyPHP\Database\Blueprint;
+use LadyPHP\Database\Migration\Migration;
+use LadyPHP\Database\Migration\Blueprint;
 
 class {$className} extends Migration
 {

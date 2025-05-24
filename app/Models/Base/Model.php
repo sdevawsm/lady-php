@@ -3,6 +3,7 @@
 namespace App\Models\Base;
 
 use PDO;
+use LadyPHP\Database\ORM\QueryBuilder;
 
 abstract class Model
 {

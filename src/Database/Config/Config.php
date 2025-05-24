@@ -1,6 +1,6 @@
 <?php
 
-namespace LadyPHP\Database;
+namespace LadyPHP\Database\Config;
 
 use PDO;
 
@@ -18,7 +18,7 @@ class Config
             return;
         }
 
-        $envFile = __DIR__ . '/../../.env';
+        $envFile = __DIR__ . '/../../../.env';
         if (!file_exists($envFile)) {
             throw new \Exception('.env file not found. Please create one based on .env.example');
         }

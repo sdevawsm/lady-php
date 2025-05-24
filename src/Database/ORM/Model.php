@@ -1,8 +1,9 @@
 <?php
 
-namespace LadyPHP\Database;
+namespace LadyPHP\Database\ORM;
 
 use PDO;
+use LadyPHP\Database\ORM\QueryBuilder;
 
 abstract class Model
 {

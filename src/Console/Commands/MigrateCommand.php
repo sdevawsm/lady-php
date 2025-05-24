@@ -3,8 +3,8 @@
 namespace LadyPHP\Console\Commands;
 
 use LadyPHP\Console\Command;
-use LadyPHP\Database\Config;
-use LadyPHP\Database\MigrationManager;
+use LadyPHP\Database\Config\Config;
+use LadyPHP\Database\Migration\MigrationManager;
 use PDO;
 
 class MigrateCommand extends Command

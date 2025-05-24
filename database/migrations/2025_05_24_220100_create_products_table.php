@@ -2,8 +2,8 @@
 
 namespace Database\Migrations;
 
-use LadyPHP\Database\Migration;
-use LadyPHP\Database\Blueprint;
+use LadyPHP\Database\Migration\Migration;
+use LadyPHP\Database\Migration\Blueprint;
 
 class CreateProductsTable extends Migration
 {
