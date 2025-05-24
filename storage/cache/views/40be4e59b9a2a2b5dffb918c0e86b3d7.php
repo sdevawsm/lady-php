@@ -22,7 +22,9 @@
                 <h4>Informações Adicionais:</h4>
                 <p>Este é um framework PHP minimalista e elegante, inspirado em Laravel mas com uma abordagem mais simples.</p>
             </div>
-            </div>',
+        
+
+    </div>',
   'styles' => '<style>
     .header {
         text-align: center;
@@ -44,6 +46,25 @@
     }
     .content li:last-child {
         border-bottom: none;
+    }
+    .status-box {
+        margin-top: 20px;
+        padding: 15px;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    .status-active {
+        color: #28a745;
+        font-weight: bold;
+    }
+    .status-pending {
+        color: #ffc107;
+        font-weight: bold;
+    }
+    .status-unknown {
+        color: #dc3545;
+        font-weight: bold;
     }
 </style>',
   'title' => 'Bem-vindo ao LadyPHP',

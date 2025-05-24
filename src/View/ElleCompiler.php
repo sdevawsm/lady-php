@@ -161,7 +161,58 @@ class ElleCompiler
             '/@endforeach/' => '<?php endforeach; ?>',
             
             // @include('view')
-            '/@include\s*\(\s*[\'"]([^\'"]+)[\'"]\s*\)/' => '<?php include $this->compile("$1", get_defined_vars()); ?>'
+            '/@include\s*\(\s*[\'"]([^\'"]+)[\'"]\s*\)/' => '<?php include $this->compile("$1", get_defined_vars()); ?>',
+
+            // @for(condição)
+            '/@for\s*\((.*?)\)/' => '<?php for($1): ?>',
+            
+            // @endfor
+            '/@endfor/' => '<?php endfor; ?>',
+            
+            // @while(condição)
+            '/@while\s*\((.*?)\)/' => '<?php while($1): ?>',
+            
+            // @endwhile
+            '/@endwhile/' => '<?php endwhile; ?>',
+            
+            // @unless(condição)
+            '/@unless\s*\((.*?)\)/' => '<?php if(!($1)): ?>',
+            
+            // @endunless
+            '/@endunless/' => '<?php endif; ?>',
+            
+            // @isset(variável)
+            '/@isset\s*\((.*?)\)/' => '<?php if(isset($1)): ?>',
+            
+            // @endisset
+            '/@endisset/' => '<?php endif; ?>',
+            
+            // @empty(variável)
+            '/@empty\s*\((.*?)\)/' => '<?php if(empty($1)): ?>',
+            
+            // @endempty
+            '/@endempty/' => '<?php endif; ?>',
+            
+            // @switch(variável)
+            '/@switch\s*\((.*?)\)/' => '<?php switch($1): ?>',
+            
+            // @case(valor)
+            '/@case\s*\((.*?)\)/' => '<?php case $1: ?>',
+            
+            // @break
+            '/@break/' => '<?php break; ?>',
+            
+            // @default
+            '/@default/' => '<?php default: ?>',
+            
+            // @endswitch
+            '/@endswitch/' => '<?php endswitch; ?>',
+            
+            // @continue
+            '/@continue/' => '<?php continue; ?>',
+            
+            // @break
+            '/@break/' => '<?php break; ?>'
         ];
 
         return preg_replace(array_keys($patterns), array_values($patterns), $content);

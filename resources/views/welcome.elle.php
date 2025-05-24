@@ -38,6 +38,8 @@
                 <p>{{ $extraInfo }}</p>
             </div>
         @endif
+
+
     </div>
 @endsection
 
@@ -63,6 +65,25 @@
     }
     .content li:last-child {
         border-bottom: none;
+    }
+    .status-box {
+        margin-top: 20px;
+        padding: 15px;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    .status-active {
+        color: #28a745;
+        font-weight: bold;
+    }
+    .status-pending {
+        color: #ffc107;
+        font-weight: bold;
+    }
+    .status-unknown {
+        color: #dc3545;
+        font-weight: bold;
     }
 </style>
 @endsection 
