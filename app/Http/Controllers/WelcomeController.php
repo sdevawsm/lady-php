@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use LadyPHP\Http\Response;
 
-class WelcomeController extends Controller
+class WelcomeController extends \App\Http\Controllers\Controller
 {
     public function index(): Response
     {

@@ -1,4 +1,63 @@
-<!DOCTYPE html>
+<?php $__sections = array (
+  'content' => '<div class="header">
+        <h1>Bem-vindo ao LadyPHP</h1>
+        <p>Um framework PHP simples e elegante</p>
+    </div>
+
+    <div class="content">
+                    <h2>Bem-vindo ao seu novo projeto!</h2>
+        
+        <h3>Recursos Disponíveis:</h3>
+        <ul>
+            array(5) {
+  [0]=>
+  string(24) "Sistema de Rotas Simples"
+  [1]=>
+  string(20) "Validação de Dados"
+  [2]=>
+  string(23) "Sistema de Views (Elle)"
+  [3]=>
+  string(18) "Controladores HTTP"
+  [4]=>
+  string(14) "Respostas JSON"
+}
+<!-- Debug: Iniciando foreach -->                            <!-- Debug: Iterando feature: Sistema de Rotas Simples -->                <li>Sistema de Rotas Simples</li>
+                            <!-- Debug: Iterando feature: Validação de Dados -->                <li>Validação de Dados</li>
+                            <!-- Debug: Iterando feature: Sistema de Views (Elle) -->                <li>Sistema de Views (Elle)</li>
+                            <!-- Debug: Iterando feature: Controladores HTTP -->                <li>Controladores HTTP</li>
+                            <!-- Debug: Iterando feature: Respostas JSON -->                <li>Respostas JSON</li>
+                        <!-- Debug: Fim do foreach -->        </ul>
+
+                    <div style="margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 4px;">
+                <h4>Informações Adicionais:</h4>
+                <p>Este é um framework PHP minimalista e elegante, inspirado em Laravel mas com uma abordagem mais simples.</p>
+            </div>
+            </div>',
+  'styles' => '<style>
+    .header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .content {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+    }
+    .content ul {
+        list-style: none;
+        padding: 0;
+    }
+    .content li {
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+    }
+    .content li:last-child {
+        border-bottom: none;
+    }
+</style>',
+  'title' => 'Bem-vindo ao LadyPHP',
+); ?><!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -70,7 +129,7 @@
 
     <footer>
         <div class="container">
-            <p>&copy; <?php echo htmlspecialchars(isset($year) ? $year : date('Y')); ?> LadyPHP. Todes os direitos reservados.</p>
+            <p>&copy; <?php echo htmlspecialchars(isset($year) ? $year : date('Y')); ?> LadyPHP. Todos os direitos reservados.</p>
         </div>
     </footer>
 

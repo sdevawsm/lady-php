@@ -28,6 +28,7 @@ abstract class Controller
     protected function view(string $view, array $data = []): Response
     {
         static::initView();
+        error_log("Dados sendo passados para a view: " . print_r($data, true));
         return View::render($view, $data);
     }
 

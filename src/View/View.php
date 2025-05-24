@@ -23,11 +23,13 @@ class View
             throw new \Exception('View não foi inicializada. Chame View::init() primeiro.');
         }
 
+        error_log("View::render - Dados recebidos: " . print_r($data, true));
         $compiledFile = self::$compiler->compile($view, $data);
         
         ob_start();
         // Cria uma função anônima para encapsular o contexto
         $renderView = function($__file, $__data) {
+            error_log("Renderizando view com dados: " . print_r($__data, true));
             extract($__data);
             include $__file;
         };

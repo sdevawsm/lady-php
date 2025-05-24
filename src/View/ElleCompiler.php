@@ -21,6 +21,43 @@ class ElleCompiler
         }
     }
 
+    private function needsRecompilation(string $viewFile, string $cacheFile): bool
+    {
+        // Se o arquivo de cache não existe, precisa compilar
+        if (!file_exists($cacheFile)) {
+            return true;
+        }
+
+        // Obtém o timestamp da última modificação do arquivo de cache
+        $cacheTime = filemtime($cacheFile);
+        
+        // Verifica se a view principal foi modificada
+        if (filemtime($viewFile) > $cacheTime) {
+            return true;
+        }
+
+        // Verifica se há includes e se eles foram modificados
+        $content = file_get_contents($viewFile);
+        if (preg_match_all('/@include\s*\(\s*[\'"]([^\'"]+)[\'"]\s*\)/', $content, $matches)) {
+            foreach ($matches[1] as $include) {
+                $includeFile = $this->viewPath . '/' . $include . '.elle.php';
+                if (file_exists($includeFile) && filemtime($includeFile) > $cacheTime) {
+                    return true;
+                }
+            }
+        }
+
+        // Verifica se há @extends e se o layout foi modificado
+        if (preg_match('/@extends\s*\(\s*[\'"]([^\'"]+)[\'"]\s*\)/', $content, $matches)) {
+            $layoutFile = $this->viewPath . '/' . $matches[1] . '.elle.php';
+            if (file_exists($layoutFile) && filemtime($layoutFile) > $cacheTime) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function compile(string $view, array $data = []): string
     {
         $this->data = $data;
@@ -41,31 +78,43 @@ class ElleCompiler
             }
         }
 
-        // Compila apenas se o arquivo de cache não existir ou se a view foi modificada
-        if (!file_exists($cacheFile) || filemtime($viewFile) > filemtime($cacheFile)) {
-            // Primeiro, processa a view para coletar as seções
-            $viewContent = file_get_contents($viewFile);
+        // Primeiro, lê o conteúdo da view para verificar o layout
+        $viewContent = file_get_contents($viewFile);
+        
+        // Verifica se há @extends e processa o layout
+        if (preg_match('/@extends\s*\(\s*[\'"]([^\'"]+)[\'"]\s*\)/', $viewContent, $matches)) {
+            $this->currentLayout = $matches[1];
+            $layoutFile = $this->viewPath . '/' . $this->currentLayout . '.elle.php';
             
-            // Processa o conteúdo da view para converter as diretivas em PHP
-            $viewContent = $this->parseDirectives($viewContent);
+            // Se o layout não existe, lança exceção
+            if (!file_exists($layoutFile)) {
+                throw new \Exception("Layout {$this->currentLayout} não encontrado");
+            }
             
-            // Processa as seções e o layout
-            $this->processSections($viewContent);
-
-            // Se houver um layout, processa-o com as seções coletadas
-            if ($this->currentLayout !== null) {
-                $layoutFile = $this->viewPath . '/' . $this->currentLayout . '.elle.php';
-                if (!file_exists($layoutFile)) {
-                    throw new \Exception("Layout {$this->currentLayout} não encontrado");
-                }
+            // Verifica se o arquivo de cache precisa ser atualizado
+            if ($this->needsRecompilation($viewFile, $cacheFile)) {
+                // Primeiro processa as seções
+                $this->processSections($viewContent);
+                
+                // Processa o layout
                 $layoutContent = file_get_contents($layoutFile);
                 $compiled = $this->parseLayout($layoutContent);
-            } else {
-                $compiled = $viewContent;
-            }
 
-            if (file_put_contents($cacheFile, $compiled) === false) {
-                throw new \Exception("Não foi possível escrever no arquivo de cache: {$cacheFile}");
+                // Adiciona as seções ao início do arquivo compilado
+                $compiled = '<?php $__sections = ' . var_export($this->sections, true) . '; ?>' . $compiled;
+
+                if (file_put_contents($cacheFile, $compiled) === false) {
+                    throw new \Exception("Não foi possível escrever no arquivo de cache: {$cacheFile}");
+                }
+            }
+        } else {
+            // Se não há layout, verifica apenas a view
+            if ($this->needsRecompilation($viewFile, $cacheFile)) {
+                $compiled = $this->parseDirectives($viewContent);
+                
+                if (file_put_contents($cacheFile, $compiled) === false) {
+                    throw new \Exception("Não foi possível escrever no arquivo de cache: {$cacheFile}");
+                }
             }
         }
 
@@ -122,14 +171,38 @@ class ElleCompiler
             $this->currentLayout = $matches[1];
         }
 
-        // Processa @section
-        preg_match_all('/@section\s*\(\s*[\'"]([^\'"]+)[\'"]\s*(?:,\s*[\'"]([^\'"]*)[\'"])?\s*\)(.*?)@endsection/s', $content, $matches, PREG_SET_ORDER);
+        // Processa @section com conteúdo
+        preg_match_all('/@section\s*\(\s*[\'"]([^\'"]+)[\'"]\s*\)(.*?)@endsection/s', $content, $matches, PREG_SET_ORDER);
         
         foreach ($matches as $match) {
             $name = $match[1];
-            $content = isset($match[3]) ? $match[3] : $match[2];
-            $this->sections[$name] = $this->parseDirectives($content);
+            $sectionContent = trim($match[2]);
+            
+            // Processa o conteúdo da seção antes de armazenar
+            ob_start();
+            // Extrai as variáveis para o escopo atual
+            extract($this->data);
+            // Executa o código com as variáveis disponíveis
+            eval('?>' . $this->parseDirectives($sectionContent));
+            $processedContent = ob_get_clean();
+            
+            $this->sections[$name] = $processedContent;
         }
+
+        // Processa @section com valor padrão (como no caso do title)
+        preg_match_all('/@section\s*\(\s*[\'"]([^\'"]+)[\'"]\s*,\s*[\'"]([^\'"]*)[\'"]\s*\)/', $content, $matches, PREG_SET_ORDER);
+        
+        foreach ($matches as $match) {
+            $name = $match[1];
+            $default = $match[2];
+            if (!isset($this->sections[$name])) {
+                $this->sections[$name] = $default;
+            }
+        }
+
+        // Remove todas as seções do conteúdo original
+        $content = preg_replace('/@section\s*\(\s*[\'"][^\'"]+[\'"]\s*(?:,\s*[\'"][^\'"]*[\'"])?\s*\)(.*?)@endsection/s', '', $content);
+        $content = preg_replace('/@section\s*\(\s*[\'"][^\'"]+[\'"]\s*,\s*[\'"][^\'"]*[\'"]\s*\)/', '', $content);
     }
 
     private function parseLayout(string $content): string

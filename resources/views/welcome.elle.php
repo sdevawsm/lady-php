@@ -15,9 +15,15 @@
 
         <h3>Recursos Disponíveis:</h3>
         <ul>
+            <?php 
+            var_dump($features); // Debug para ver o conteúdo de $features
+            echo "<!-- Debug: Iniciando foreach -->"; 
+            ?>
             @foreach($features as $feature)
+                <?php echo "<!-- Debug: Iterando feature: " . htmlspecialchars($feature) . " -->"; ?>
                 <li>{{ $feature }}</li>
             @endforeach
+            <?php echo "<!-- Debug: Fim do foreach -->"; ?>
         </ul>
 
         @if($showExtra)
