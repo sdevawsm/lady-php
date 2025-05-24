@@ -9,7 +9,8 @@
     "autoload": {
         "psr-4": {
             "App\\": "app/",
-            "LadyPHP\\": "src/"
+            "LadyPHP\\": "src/",
+            "Database\\Migrations\\": "database/migrations/"
         },
         "files": [
             "src/helpers.php"

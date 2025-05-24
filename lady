@@ -1,0 +1,17 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/vendor/autoload.php';
+
+use LadyPHP\Console\Application;
+use LadyPHP\Console\Commands\MigrateCommand;
+use LadyPHP\Console\Commands\MakeMigrationCommand;
+
+$app = new Application();
+
+// Registra os comandos
+$app->add(new MigrateCommand());
+$app->add(new MakeMigrationCommand());
+
+// Executa o comando
+$app->run($argv); 
